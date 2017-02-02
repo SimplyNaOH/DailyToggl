@@ -35,7 +35,7 @@ update msg model =
         RequestResponse date (Ok entries) ->
 --            ( { model | days = List.sortBy (Maybe.withDefault 0 << Maybe.map Date.day << Maybe.map Date.fromTime << Maybe.map .start << List.head)
 --                <| model.days ++ [entries] }, Cmd.none )
-            ( { model | days = List.sortBy (\(date,_) -> Date.day date) <| model.days ++ [(date, entries)] }, Cmd.none)
+            ( { model | days = List.sortBy (\(date,_) -> Date.toTime date) <| model.days ++ [(date, entries)] }, Cmd.none)
 
         RequestResponse _ (Err htmlError) ->
             ( { model | errors = model.errors ++ [ toString htmlError ] }, Cmd.none )
