@@ -10,19 +10,20 @@ import Time exposing (Time)
 import Http
 import BasicAuth
 
+import Time
+
 import Model exposing (..)
 import Update exposing (..)
 import TimelineView exposing (..)
+import CmdDispatcher
 
 
 -- View
 
-view : Model -> Html.Html Msg
+view : Model Msg -> Html.Html Msg
 view model =
     div []
-        [ h1 [] [text "Beware"]
-        , h2 [] [text "This is a proof of concept. If you don't throttle the network some requests will fail."]
-        , p [] [ text <| "Today is " ++ Maybe.withDefault "Loading Date" (Maybe.map toString model.date) ]
+        [ p [] [ text <| "Today is " ++ Maybe.withDefault "Loading Date" (Maybe.map toString model.date) ]
         , input [placeholder "API Token", value model.token, onInput SetToken] []
         , input [placeholder "Workspace ID", value model.workspace, onInput SetWorkspace] []
         , a [ href "#0", onClick LoadData ] [ text "load data" ]
@@ -38,7 +39,7 @@ view model =
 main =
     Html.program
         { init = ( initialModel, Task.perform SetDate Date.now )
-        , subscriptions = always Sub.none
+        , subscriptions = \model -> Sub.map CmdDispatcherMsg (CmdDispatcher.subscriptions Time.second model.cmdDispatcher)
         , view = view
         , update = update
         }

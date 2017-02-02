@@ -1,6 +1,7 @@
 module Update exposing (..)
 
 import Model exposing (..)
+import CmdDispatcher
 
 import Http
 import BasicAuth
@@ -24,16 +25,17 @@ type Msg
     | SetDate Date
     | SetToken String
     | SetWorkspace String
+    | CmdDispatcherMsg CmdDispatcher.Msg
     | NoOp
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model Msg -> ( Model Msg, Cmd Msg )
 update msg model =
     case msg of
         RequestResponse date (Ok entries) ->
 --            ( { model | days = List.sortBy (Maybe.withDefault 0 << Maybe.map Date.day << Maybe.map Date.fromTime << Maybe.map .start << List.head)
 --                <| model.days ++ [entries] }, Cmd.none )
-            ( { model | days = List.sortBy (\(date,_) -> Date.day date) model.days ++ [(date, entries)] }, Cmd.none)
+            ( { model | days = List.sortBy (\(date,_) -> Date.day date) <| model.days ++ [(date, entries)] }, Cmd.none)
 
         RequestResponse _ (Err htmlError) ->
             ( { model | errors = model.errors ++ [ toString htmlError ] }, Cmd.none )
@@ -52,11 +54,11 @@ update msg model =
                 Just date ->
                   let
                     entriesCmds = (List.map (\date -> Http.send (RequestResponse date) <| getDetailedReport model.token model.workspace date) <|
-                      List.scanl (\x acc -> prevDay acc) date [1,2,3,4,5,6])
+                      List.scanl (\x acc -> prevDay acc) date (List.range 1 7))
                     colorsCmds = (List.map (\date -> Http.send ColorsResponse <| getSummary model.token model.workspace date) <|
-                      List.scanl (\x acc -> prevDay acc) date [1,2,3,4,5,6])
+                      List.scanl (\x acc -> prevDay acc) date (List.range 1 7))
                   in
-                    model ! ( entriesCmds ++ colorsCmds)
+                    ( {model | cmdDispatcher = model.cmdDispatcher ++ entriesCmds ++ colorsCmds }, Cmd.none)
 
         SetTooltip str ->
             ( { model | tooltip = str }, Cmd.none )
@@ -69,6 +71,13 @@ update msg model =
 
         SetWorkspace workspace ->
             ( { model | workspace = workspace }, Cmd.none )
+
+        CmdDispatcherMsg subMsg ->
+          let
+            (updatedDispatcher, cmds) = CmdDispatcher.update 4 subMsg model.cmdDispatcher
+          in
+            ( { model | cmdDispatcher = updatedDispatcher }
+            , cmds)
 
         NoOp ->
             ( model, Cmd.none )

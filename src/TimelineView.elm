@@ -66,7 +66,7 @@ timelineView model =
           , ("height", "100%")
           , ("z-index", "3")
           , ("text-align", "center")
-          , ("padding-top", "1%")
+          , ("padding-top", "0.6%")
           , ("font-size", "3em")
           , ("color", "white")
           , ("text-shadow", "black 0 0 17px, black 0 0 7px")
