@@ -26,7 +26,8 @@ view model =
         [ p [] [ text <| "Today is " ++ Maybe.withDefault "Loading Date" (Maybe.map toString model.date) ]
         , input [placeholder "API Token", value model.token, onInput SetToken] []
         , input [placeholder "Workspace ID", value model.workspace, onInput SetWorkspace] []
-        , a [ href "#0", onClick LoadData ] [ text "load data" ]
+        , p [] [a [ href "#0", onClick LoadData ] [ text "load data" ]]
+        , p [] [a [ href "#0", onClick ExampleData ] [ text "example data" ]]
 --        , ul [] <|
 --            List.map (\data -> li [] [ text data.project ]) model.data
         , timelineView model

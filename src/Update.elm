@@ -21,6 +21,7 @@ type Msg
     = RequestResponse Date (Result Http.Error (List Entry))
     | ColorsResponse (Result Http.Error (List (String, String)))
     | LoadData
+    | ExampleData
     | SetTooltip String
     | SetDate Date
     | SetToken String
@@ -59,6 +60,23 @@ update msg model =
                       List.scanl (\x acc -> prevDay acc) date (List.range 1 7))
                   in
                     ( {model | cmdDispatcher = model.cmdDispatcher ++ entriesCmds ++ colorsCmds }, Cmd.none)
+
+        ExampleData ->
+          let
+            tupleDecoder = Json.map2 (,) (Json.field "fst" Json.string) (Json.field "snd" Json.string)
+            colorsDecoder = Json.map (Dict.fromList) (Json.list tupleDecoder)
+            entryDecoder = Json.map4 Entry
+              (Json.field "project" Json.string)
+              (Json.field "start" Json.float)
+              (Json.field "end" Json.float)
+              (Json.field "dur" Json.float)
+            daysDecoder = Json.list <| Json.map2 (,)
+              (Json.field "date" (Json.map Date.fromTime Json.float))
+              (Json.field "entries" (Json.list entryDecoder))
+            colorsResult = Json.decodeString (Json.field "colors" colorsDecoder) exampleData
+            daysResult = Json.decodeString (Json.field "days" daysDecoder) exampleData
+          in
+            ( { model | days = Result.withDefault [] daysResult, colors = Result.withDefault Dict.empty colorsResult }, Cmd.none )
 
         SetTooltip str ->
             ( { model | tooltip = str }, Cmd.none )
